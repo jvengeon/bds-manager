@@ -1,0 +1,39 @@
+application:
+    build: code
+    volumes:
+        - ../bds-manager:/var/www/bds-manager
+        - ../logs/bds-manager:/var/www/bds-manager/var/logs
+db:
+    image: mysql:5.7
+    ports:
+        - "3306:3306"
+    environment:
+        - "MYSQL_ROOT_PASSWORD="
+        - "MYSQL_USER=root"
+        - "MYSQL_PASSWORD="
+        - "MYSQL_DATABASE=bd"
+php:
+    image: php:7.0-fpm
+    links:
+        - db
+nginx:
+    build: nginx
+    ports:
+        - 80:80
+    links:
+        - php
+    volumes_from:
+        - application
+    volumes:
+        - ../logs/nginx/:/var/log/nginx
+elk:
+    image: willdurand/elk
+    ports:
+        - 81:80
+    volumes:
+        - ./elk/logstash:/etc/logstash
+        - ./elk/logstash/patterns:/opt/logstash/patterns
+    volumes_from:
+        - application
+        - php
+        - nginx
